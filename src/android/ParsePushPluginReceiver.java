@@ -40,42 +40,44 @@ public class ParsePushPluginReceiver extends ParsePushBroadcastReceiver
 			// (older messages with the same tag and notification id will be replaced)
 			NotificationManager notifManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 			notifManager.notify(getNotificationTag(context, intent), 0, getNotification(context, intent));
-		}
-		
-	    //
-	    // relay the push notification data to the javascript
-		ParsePushPlugin.jsCallback( getPushData(intent) );
+		} else {
+	       //
+	       // relay the push notification data to the javascript
+		  ParsePushPlugin.jsCallback( getPushData(intent) );
+        }    
 	}
 	
 	@Override
     protected void onPushOpen(Context context, Intent intent) {
-		Log.d(LOGTAG, "onPushOpen - context: " + context);
-		
-        JSONObject pnData = getPushData(intent);
-        resetCount(getNotificationTag(context, pnData));
-        
-        String uriString = pnData.optString("uri");
-        Intent activityIntent = uriString.isEmpty() ? new Intent(context, getActivity(context, intent))
-                                                    : new Intent(Intent.ACTION_VIEW, Uri.parse(uriString));
-        
-        activityIntent.putExtras(intent)
-                      .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
-        
-        //
-        // allow a urlHash parameter for hash as well as query params.
-        // This lets the app know what to do at coldstart by opening a PN.
-        // For example: navigate to a specific page of the app
-        String urlHash = pnData.optString("urlHash");
-        if(urlHash.startsWith("#") || urlHash.startsWith("?")){
-        	activityIntent.putExtra("urlHash", urlHash);
-        }
-        
-        context.startActivity(activityIntent);
-        
-        //
-	    // relay the push notification data to the javascript in case the
-        // app is already running when this push is open.
-		ParsePushPlugin.jsCallback(getPushData(intent), "OPEN");
+		try{
+            Log.d(LOGTAG, "onPushOpen - context: " + context);
+
+            JSONObject pnData = getPushData(intent);
+            resetCount(getNotificationTag(context, pnData));
+
+            String uriString = pnData.optString("uri");
+            Intent activityIntent = uriString.isEmpty() ? new Intent(context, getActivity(context, intent))
+                                                        : new Intent(Intent.ACTION_VIEW, Uri.parse(uriString));
+
+            activityIntent.putExtras(intent)
+                          .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            //
+            // allow a urlHash parameter for hash as well as query params.
+            // This lets the app know what to do at coldstart by opening a PN.
+            // For example: navigate to a specific page of the app
+            String urlHash = pnData.optString("urlHash");
+            if(urlHash.startsWith("#") || urlHash.startsWith("?")){
+                activityIntent.putExtra("urlHash", urlHash);
+            }
+
+            context.startActivity(activityIntent);
+
+            //
+            // relay the push notification data to the javascript in case the
+            // app is already running when this push is open.
+            ParsePushPlugin.jsCallback(getPushData(intent), "OPEN");
+        } catch (Exception ex){}    
     }
 	
 	@Override
