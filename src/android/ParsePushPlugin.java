@@ -19,6 +19,7 @@ import com.parse.ParseInstallation;
 import android.util.Log;
 
 public class ParsePushPlugin extends CordovaPlugin {
+    public static final String ACTION_REGISTER = "register";
     public static final String ACTION_GET_INSTALLATION_ID = "getInstallationId";
     public static final String ACTION_GET_INSTALLATION_OBJECT_ID = "getInstallationObjectId";
     public static final String ACTION_GET_SUBSCRIPTIONS = "getSubscriptions";
@@ -29,6 +30,7 @@ public class ParsePushPlugin extends CordovaPlugin {
     private static CallbackContext gEventCallback = null;
 
     private static CordovaWebView gWebView;
+    private static String gECB;
     private static boolean gForeground = false;
 
     public static final String LOGTAG = "ParsePushPlugin";
@@ -39,6 +41,11 @@ public class ParsePushPlugin extends CordovaPlugin {
     		gEventCallback = callbackContext;
     		return true;
     	}
+
+        if (action.equals(ACTION_REGISTER)) {
+            this.registerDevice(callbackContext, args);
+            return true;
+        }
 
         if (action.equals(ACTION_GET_INSTALLATION_ID)) {
             this.getInstallationId(callbackContext);
@@ -64,6 +71,28 @@ public class ParsePushPlugin extends CordovaPlugin {
         return false;
     }
 
+    private void registerDevice(final CallbackContext callbackContext, final JSONArray args) {
+    	try {
+        	JSONObject jo = args.getJSONObject(0);
+            String appId = jo.getString("appId");
+            String clientKey = jo.getString("clientKey");
+
+        	//
+        	// initialize Parse
+            Parse.initialize(cordova.getActivity(), appId, clientKey);
+            ParseInstallation.getCurrentInstallation().saveInBackground();
+
+            //
+            // register callbacks for notification events
+            gECB = jo.optString("ecb");
+
+            callbackContext.success();
+        } catch (JSONException e) {
+            callbackContext.error("JSONException: " + e.toString());
+        } catch(Exception e){
+        	callbackContext.error(e.toString());
+        }
+    }
 
     private void getInstallationId(final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(new Runnable() {
