@@ -39,8 +39,8 @@ var ParsePushPlugin = {
 	 _receiveEvent: 'receivePN',
 	 _customEventKey: 'event', //default key for custom events associated with each PN, set this to anything you see fit
 	 
-    register: function(regParams, successCallback, errorCallback) {
-        cordova.exec(successCallback, errorCallback,'ParsePlugin', 'register',[regParams]);
+    register: function(regParams, successCb, errorCb) {
+        cordova.exec(successCb, errorCb, serviceName, 'register',[regParams]);
     },
 
     getInstallationId: function(successCb, errorCb) {
